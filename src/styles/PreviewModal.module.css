@@ -54,6 +54,7 @@
 
 .pairingWrap,
 .successWrap,
+.errorWrap,
 .statusArea {
   position: relative;
   z-index: 1;
@@ -402,8 +403,6 @@
   }
 }
 
-
-
 .jobHeader {
   position: absolute;
   top: 14%;
@@ -419,9 +418,48 @@
   padding: 6px 10px;
   backdrop-filter: blur(2px);
 }
-.jobLabel { color: #9fb3d1; font-size: 12px; }
+.jobLabel {
+  color: #9fb3d1;
+  font-size: 12px;
+}
 .jobValue {
   color: #cfe3ff;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', monospace;
   font-size: 12px;
+}
+
+.errorWrap {
+  width: 50%;
+  height: 50%;
+  display: grid;
+  place-items: center;
+  animation: fadeIn 0.25s ease;
+  transform: translateY(-10%);
+}
+
+.errorSvg {
+  width: 160px;
+  height: 160px;
+}
+
+.errorCircle {
+  stroke: #ef4444; /* red-500 */
+  stroke-dasharray: 320;
+  stroke-dashoffset: 320;
+  animation: draw 0.9s ease forwards;
+  filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.5));
+}
+
+.errorCross {
+  stroke: #f87171; /* red-400 */
+  stroke-dasharray: 160;
+  stroke-dashoffset: 160;
+  animation: draw 0.8s 0.5s ease forwards;
+  filter: drop-shadow(0 0 8px rgba(248, 113, 113, 0.5));
+}
+
+.errorText {
+  color: #fecaca; /* red-200 */
+  text-shadow: 0 0 8px rgba(248, 113, 113, 0.35);
 }

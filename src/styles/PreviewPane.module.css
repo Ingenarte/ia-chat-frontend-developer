@@ -34,3 +34,10 @@
     opacity: 1;
   }
 }
+
+.jobId {
+  margin-left: 1rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+

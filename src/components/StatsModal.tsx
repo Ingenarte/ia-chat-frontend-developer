@@ -2,9 +2,20 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from '@/styles/StatsModal.module.css';
 
+type JobRowRaw = {
+  id?: string;
+  job_id?: string;
+  status?: 'received' | 'processing' | 'finished' | 'failed' | string;
+  created_at?: string;
+  finished_at?: string | null;
+  prompt_size?: number;
+  output_bytes?: number;
+  model?: string;
+};
+
 type JobRow = {
   id: string;
-  status: 'pending' | 'processing' | 'done' | 'failed';
+  status: 'received' | 'processing' | 'finished' | 'failed' | 'unknown';
   created_at?: string;
   finished_at?: string | null;
   prompt_size?: number;
@@ -13,20 +24,42 @@ type JobRow = {
 };
 
 type StatsPayload = {
-  live: {
-    received: number;
-    processing: number;
-    finished: number;
-    failed: number;
+  // Old shape fallback
+  uptime_sec?: number;
+  total_jobs?: number;
+  running_jobs?: number;
+  finished_jobs?: number;
+  failed_jobs?: number;
+  avg_latency_ms?: number;
+
+  // New shape from /jobs/stats
+  live?: {
+    received?: number;
+    processing?: number;
+    finished?: number;
+    failed?: number;
   };
-  total: {
-    received: number;
-    processing: number;
-    finished: number;
-    failed: number;
-    created: number;
+  total?: {
+    received?: number;
+    processing?: number;
+    finished?: number;
+    failed?: number;
+    created?: number;
   };
 };
+
+function normalizeRow(r: JobRowRaw, fallbackKey: string): JobRow {
+  const id = (r.id ?? r.job_id ?? '').toString();
+  return {
+    id: id || fallbackKey,
+    status: (r.status as any) ?? 'unknown',
+    created_at: r.created_at,
+    finished_at: r.finished_at,
+    prompt_size: r.prompt_size,
+    output_bytes: r.output_bytes,
+    model: r.model,
+  };
+}
 
 export default function StatsModal({
   open,
@@ -44,6 +77,7 @@ export default function StatsModal({
 
   async function fetchAll() {
     try {
+      // Prefer new endpoints/shapes but be tolerant
       const [s, r1, r2] = await Promise.all([
         fetch(`${apiBase}/jobs/stats`, { cache: 'no-store' }).then((r) =>
           r.ok ? r.json() : null
@@ -51,15 +85,31 @@ export default function StatsModal({
         fetch(`${apiBase}/jobs?status=processing&limit=20`, {
           cache: 'no-store',
         }).then((r) => (r.ok ? r.json() : [])),
-        fetch(`${apiBase}/jobs?status=done&limit=20`, {
+        fetch(`${apiBase}/jobs?status=finished&limit=20`, {
           cache: 'no-store',
         }).then((r) => (r.ok ? r.json() : [])),
       ]);
+
+      // Stats can be either the new {live,total} or old flat counters
       setStats(s ?? null);
-      setRunning(Array.isArray(r1) ? r1 : r1?.items ?? []);
-      setRecent(Array.isArray(r2) ? r2 : r2?.items ?? []);
+
+      const itemsProcessing: JobRowRaw[] = Array.isArray(r1)
+        ? r1
+        : Array.isArray(r1?.items)
+        ? r1.items
+        : [];
+      const itemsFinished: JobRowRaw[] = Array.isArray(r2)
+        ? r2
+        : Array.isArray(r2?.items)
+        ? r2.items
+        : [];
+
+      setRunning(
+        itemsProcessing.map((row, i) => normalizeRow(row, `proc-${i}`))
+      );
+      setRecent(itemsFinished.map((row, i) => normalizeRow(row, `done-${i}`)));
     } catch {
-      // Keep previous data; modal must not crash
+      // Keep previous data; do not crash the modal
     }
   }
 
@@ -75,6 +125,10 @@ export default function StatsModal({
 
   if (!open) return null;
 
+  // Helpers for display with graceful fallbacks
+  const live = stats?.live ?? {};
+  const total = stats?.total ?? {};
+
   return (
     <div className={styles.overlay} role="dialog" aria-modal="true">
       <div className={styles.backdrop} onClick={onClose} />
@@ -86,27 +140,31 @@ export default function StatsModal({
           </button>
         </div>
 
-        {/* Row 1: Live */}
+        {/* Metrics */}
         <section className={styles.metrics}>
-          <Metric label="Live received" value={stats?.live.received ?? '—'} />
+          {/* Live line */}
+          <Metric label="Live received" value={live.received ?? 0} />
+          <Metric label="Live processing" value={live.processing ?? 0} />
+          <Metric label="Live finished" value={live.finished ?? 0} />
+          <Metric label="Live failed" value={live.failed ?? 0} />
+          {/* Totals line */}
           <Metric
-            label="Live processing"
-            value={stats?.live.processing ?? '—'}
+            label="Total received"
+            value={total.received ?? stats?.total_jobs ?? 0}
           />
-          <Metric label="Live finished" value={stats?.live.finished ?? '—'} />
-          <Metric label="Live failed" value={stats?.live.failed ?? '—'} />
-        </section>
-
-        {/* Row 2: Totals */}
-        <section className={styles.metrics}>
-          <Metric label="Total received" value={stats?.total.received ?? '—'} />
           <Metric
             label="Total processing"
-            value={stats?.total.processing ?? '—'}
+            value={total.processing ?? stats?.running_jobs ?? 0}
           />
-          <Metric label="Total finished" value={stats?.total.finished ?? '—'} />
-          <Metric label="Total failed" value={stats?.total.failed ?? '—'} />
-          <Metric label="Total created" value={stats?.total.created ?? '—'} />
+          <Metric
+            label="Total finished"
+            value={total.finished ?? stats?.finished_jobs ?? 0}
+          />
+          <Metric
+            label="Total failed"
+            value={total.failed ?? stats?.failed_jobs ?? 0}
+          />
+          <Metric label="Total created" value={total.created ?? 0} />
         </section>
 
         <div className={styles.columns}>
@@ -154,25 +212,29 @@ function JobTable({ rows, empty }: { rows: JobRow[]; empty: string }) {
               </td>
             </tr>
           ) : (
-            rows.map((r) => (
-              <tr key={r.id}>
-                <td className={styles.mono}>{r.id.slice(0, 8)}</td>
-                <td>
-                  <span
-                    className={`${styles.badge} ${styles[`st_${r.status}`]}`}
-                  >
-                    {r.status}
-                  </span>
-                </td>
-                <td className={styles.mono}>{r.model ?? '—'}</td>
-                <td className={styles.mono}>
-                  {r.created_at ? fmtDate(r.created_at) : '—'}
-                </td>
-                <td className={styles.mono}>
-                  {r.finished_at ? fmtDate(r.finished_at) : '—'}
-                </td>
-              </tr>
-            ))
+            rows.map((r, i) => {
+              const idShort = (r.id ?? '').toString().slice(0, 8) || '—';
+              const st = r.status ?? 'unknown';
+              return (
+                <tr key={`${r.id}-${i}`}>
+                  <td className={styles.mono}>{idShort}</td>
+                  <td>
+                    <span
+                      className={`${styles.badge} ${styles[`st_${st}`] || ''}`}
+                    >
+                      {st}
+                    </span>
+                  </td>
+                  <td className={styles.mono}>{r.model ?? '—'}</td>
+                  <td className={styles.mono}>
+                    {r.created_at ? fmtDate(r.created_at) : '—'}
+                  </td>
+                  <td className={styles.mono}>
+                    {r.finished_at ? fmtDate(r.finished_at) : '—'}
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

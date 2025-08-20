@@ -1,6 +1,6 @@
 'use client';
 import { useCallback, useRef, useState } from 'react';
-import ChatPanel from '@/components/ChatPanel';
+import ChatPanel, { ChatPanelHandle } from '@/components/ChatPanel';
 import PreviewPane from '@/components/PreviewPane';
 import type { ModalPhase } from '@/components/PreviewModal';
 import '@/app/globals.css';
@@ -14,17 +14,49 @@ export default function Page() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalPhase, setModalPhase] = useState<ModalPhase>('pairing');
   const [modalText, setModalText] = useState<string | undefined>(undefined);
+  const [jobId, setJobId] = useState<string | undefined>(undefined); // NEW
 
   const [statsOpen, setStatsOpen] = useState(false);
   const [outOfServiceOpen, setOutOfServiceOpen] = useState(false);
 
   const closeTimeoutRef = useRef<number | null>(null);
+  const chatRef = useRef<ChatPanelHandle>(null);
 
-  const handleRequestStart = useCallback(() => {
+  const handleModalFinished = useCallback(
+    ({
+      success,
+      html: resultHtml,
+      error,
+    }: {
+      success: boolean;
+      html?: string;
+      error?: string;
+    }) => {
+      if (success && resultHtml) {
+        setHtml(resultHtml);
+      } else if (!success) {
+        console.log('Job failed:', error);
+
+        // inject error directly into chat
+        chatRef.current?.pushSystemMessage(
+          `❌ Job failed: ${error || 'Unknown error'}. Please try again.`
+        );
+
+        // still update modal for animation
+        setModalPhase('error');
+        setModalText(`Job failed: ${error || 'Unknown error'}`);
+      }
+    },
+    []
+  );
+
+  const handleRequestStart = useCallback((id?: string) => {
+    // CHANGED: accept job id
     if (closeTimeoutRef.current) {
       window.clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
+    setJobId(id); // NEW: store job id for the modal
     setModalText(undefined);
     setModalPhase('pairing');
     setModalOpen(true);
@@ -60,6 +92,7 @@ export default function Page() {
         </div>
         <div className={styles.chatSlot}>
           <ChatPanel
+            ref={chatRef}
             onHtml={setHtml}
             currentHtml={html}
             onRequestStart={handleRequestStart}
@@ -76,6 +109,8 @@ export default function Page() {
           modalPhase={modalPhase}
           modalText={modalText}
           onModalClose={() => setModalOpen(false)}
+          jobId={jobId}
+          onFinished={handleModalFinished}
         />
       </section>
 
