@@ -19,10 +19,12 @@
   background: #0f1625;
   border: 1px solid #223042;
   border-radius: 14px;
-  box-shadow: 0 20px 80px rgba(0,0,0,.55);
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.55);
   padding: 14px 14px 18px;
   color: #e6edf6;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .header {
   display: flex;
@@ -31,7 +33,10 @@
   padding-bottom: 8px;
   border-bottom: 1px solid #1f2a3a;
 }
-.title { margin: 0; font-size: 16px; }
+.title {
+  margin: 0;
+  font-size: 16px;
+}
 .closeBtn {
   padding: 6px 10px;
   background: #111b2c;
@@ -40,7 +45,9 @@
   border-radius: 8px;
   cursor: pointer;
 }
-.closeBtn:hover { background: #0e1727; }
+.closeBtn:hover {
+  background: #0e1727;
+}
 
 .metrics {
   display: grid;
@@ -54,25 +61,48 @@
   border-radius: 10px;
   padding: 10px;
 }
-.metricLabel { color: #9fb3d1; font-size: 12px; }
-.metricValue { font-size: 16px; margin-top: 4px; color: #cfe3ff; }
+.metricLabel {
+  color: #9fb3d1;
+  font-size: 12px;
+}
+.metricValue {
+  font-size: 16px;
+  margin-top: 4px;
+  color: #cfe3ff;
+}
 
 .columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
-  height: calc(100% - 132px);
+  /* height: calc(100% - 132px); */
+  flex: 1;
+  min-height: 0;
 }
-.col { display: flex; flex-direction: column; min-width: 0; }
-.colTitle { color: #9fb3d1; font-size: 12px; margin: 6px 2px; }
+.col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  /* height: 100%; */
+  min-height: 0;
+}
+.colTitle {
+  color: #9fb3d1;
+  font-size: 12px;
+  margin: 6px 2px;
+}
 
 .tableWrap {
   background: #0b1220;
   border: 1px solid #1f2a3a;
   border-radius: 10px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
+  /* max-height: 100%; */
+  min-height: 0;
 }
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -98,7 +128,8 @@
   padding: 18px 8px;
 }
 .mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', monospace;
 }
 .badge {
   padding: 2px 8px;
@@ -108,13 +139,33 @@
   background: #0e1727;
   color: #cfe3ff;
 }
-.st_pending { background: #1a2434; color: #cfe3ff; }
-.st_processing { background: #192b1f; color: #b8f7c2; border-color: #284334; }
-.st_done { background: #142332; color: #9ec5ff; border-color: #274163; }
-.st_failed { background: #2a1b1b; color: #f5b2b2; border-color: #4c2a2a; }
+.st_pending {
+  background: #1a2434;
+  color: #cfe3ff;
+}
+.st_processing {
+  background: #192b1f;
+  color: #b8f7c2;
+  border-color: #284334;
+}
+.st_done {
+  background: #142332;
+  color: #9ec5ff;
+  border-color: #274163;
+}
+.st_failed {
+  background: #2a1b1b;
+  color: #f5b2b2;
+  border-color: #4c2a2a;
+}
 
 /* Responsive */
 @media (max-width: 900px) {
-  .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .columns { grid-template-columns: 1fr; height: calc(100% - 212px); }
+  .metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .columns {
+    grid-template-columns: 1fr;
+    height: calc(100% - 212px);
+  }
 }

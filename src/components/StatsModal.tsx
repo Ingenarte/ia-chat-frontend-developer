@@ -134,7 +134,9 @@ export default function StatsModal({
       <div className={styles.backdrop} onClick={onClose} />
       <div className={styles.panel}>
         <div className={styles.header}>
-          <h3 className={styles.title}>Service Stats</h3>
+          <h3 className={styles.title}>
+            Service Stats (from last server Start)
+          </h3>
           <button className={styles.closeBtn} onClick={onClose}>
             Close
           </button>
