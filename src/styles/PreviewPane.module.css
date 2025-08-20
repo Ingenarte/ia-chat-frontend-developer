@@ -1,0 +1,36 @@
+.wrapper {
+  position: relative; /* overlay relative to preview */
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: 1fr;
+}
+
+.frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #0a0d12;
+}
+
+.placeholder {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--text);
+}
+
+.bump {
+  animation: bumpIn 380ms ease;
+}
+
+@keyframes bumpIn {
+  0% {
+    transform: scale(0.985);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

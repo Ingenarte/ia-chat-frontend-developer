@@ -1,0 +1,63 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+}
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 10, 16, 0.55);
+  backdrop-filter: blur(2px);
+}
+.modal {
+  position: relative;
+  width: min(520px, 92vw);
+  background: #0f1625;
+  border: 1px solid #223042;
+  border-radius: 14px;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.55);
+  padding: 20px 18px;
+  color: #e6edf6;
+  z-index: 1;
+}
+.title {
+  margin: 0 0 6px 0;
+  font-size: 18px;
+}
+.body {
+  margin: 0 0 6px 0;
+  color: #b8c7de;
+  line-height: 1.4;
+}
+.small {
+  margin: 0 0 14px 0;
+  color: #98a6bb;
+  font-size: 12px;
+}
+.code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', monospace;
+  color: #cfe3ff;
+}
+.link {
+  color: #9ec5ff;
+  text-decoration: underline;
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.btn {
+  padding: 8px 12px;
+  background: #111b2c;
+  border: 1px solid #334155;
+  color: #dbe3ec;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.btn:hover {
+  background: #0e1727;
+}

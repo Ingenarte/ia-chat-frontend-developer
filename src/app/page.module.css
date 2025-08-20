@@ -67,10 +67,7 @@
   height: 48px;
   padding: 0 20px;
   border: 1px solid transparent;
-  transition:
-    background 0.2s,
-    color 0.2s,
-    border-color 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -163,5 +160,50 @@ a.secondary {
 @media (prefers-color-scheme: dark) {
   .logo {
     filter: invert();
+  }
+}
+
+/* Keep your existing rules if you need them, add/override below. */
+
+/* Left column panel uses internal grid to split vertical space 10% / 90% */
+.leftCol {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+  display: grid;
+  grid-template-rows: 10% 90%;
+  min-height: 0; /* allow inner scrollers */
+}
+
+/* Slot that contains ServiceBar (height controlled by parent grid) */
+.serviceSlot {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chat must fill the remaining 90% area */
+.chatSlot {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Right column panel is just the preview */
+.rightCol {
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+  min-height: 0;
+}
+
+/* On small screens, stack panels */
+@media (max-width: 1024px) {
+  .leftCol,
+  .rightCol {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .leftCol {
+    grid-template-rows: auto auto; /* ServiceBar then Chat stacked */
   }
 }

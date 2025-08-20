@@ -1,0 +1,427 @@
+/* Overlay and modal shell */
+.overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.closed {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 10, 16, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.modal {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+/* Centered card occupying 50 percent of the preview */
+.modal::before {
+  content: '';
+  position: absolute;
+  width: 60%;
+  height: 60%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 16px;
+  background: radial-gradient(
+    420px 260px at 50% 30%,
+    #0f172a 0%,
+    #0b1220 45%,
+    #070b12 100%
+  );
+  border: 1px solid #223042;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.55),
+    inset 0 0 20px rgba(27, 55, 100, 0.25);
+}
+
+.pairingWrap,
+.successWrap,
+.statusArea {
+  position: relative;
+  z-index: 1;
+}
+
+/* Pairing - ring based baseline */
+.pairingWrap {
+  width: 50%;
+  height: 50%;
+  display: grid;
+  place-items: center;
+  animation: fadeIn 0.25s ease;
+  transform: translateY(-10%);
+}
+
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(64, 124, 255, 0.35);
+  animation: spin 6s linear infinite, pulse 2.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(64, 124, 255, 0.3));
+}
+
+.ring1 {
+  width: 54%;
+  height: 54%;
+}
+
+.ring2 {
+  width: 68%;
+  height: 68%;
+  animation-delay: -0.5s, -0.3s;
+  opacity: 0.8;
+}
+
+.ring3 {
+  width: 82%;
+  height: 82%;
+  animation-delay: -1s, -0.6s;
+  opacity: 0.6;
+}
+
+.coreGlow {
+  width: 22%;
+  height: 22%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(90, 160, 255, 0.95),
+    rgba(30, 90, 220, 0.25) 70%,
+    transparent 75%
+  );
+  box-shadow: 0 0 50px rgba(90, 160, 255, 0.45),
+    0 0 120px rgba(50, 120, 255, 0.25);
+  animation: throb 1.8s ease-in-out infinite;
+}
+
+.particles {
+  position: absolute;
+  width: 86%;
+  height: 86%;
+  animation: orbit 10s linear infinite;
+}
+
+.dot {
+  --i: 0;
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #a7c5ff;
+  border-radius: 50%;
+  left: 50%;
+  top: 50%;
+  transform-origin: 0 -36%;
+  transform: rotate(calc(var(--i) * 12deg)) translateY(-36%);
+  filter: drop-shadow(0 0 6px rgba(100, 160, 255, 0.8));
+  animation: blink 2.4s ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * 60ms);
+}
+
+/* Status text */
+.statusArea {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 15%);
+  transform: translateX(-50%);
+  width: 48%;
+  text-align: center;
+}
+
+.statusText {
+  font-size: 20px;
+  letter-spacing: 0.14em;
+  color: #cfe3ff;
+  opacity: 0.9;
+  text-shadow: 0 0 8px rgba(110, 160, 255, 0.35);
+
+  /* Transition for smooth phrase change */
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  display: inline-block;
+}
+
+/* When entering */
+.statusText.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* When leaving */
+.statusText.fade-out {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+/* Success */
+.successWrap {
+  width: 50%;
+  height: 50%;
+  display: grid;
+  place-items: center;
+  animation: fadeIn 0.25s ease;
+  transform: translateY(-10%);
+}
+
+.successSvg {
+  width: 160px;
+  height: 160px;
+}
+
+.circle {
+  stroke: #3b82f6;
+  stroke-dasharray: 320;
+  stroke-dashoffset: 320;
+  animation: draw 0.9s ease forwards;
+  filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));
+}
+
+.check {
+  stroke: #22c55e;
+  stroke-dasharray: 120;
+  stroke-dashoffset: 120;
+  animation: draw 0.8s 0.5s ease forwards;
+  filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.5));
+}
+
+/* Keyframes - baseline */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes throb {
+  0%,
+  100% {
+    transform: scale(0.98);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0.65;
+    transform: translateY(-36%) scale(0.95) rotate(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(-36%) scale(1.05) rotate(0deg);
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes fadeText {
+  0% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Particle Earth - CSS only */
+.earthWrap {
+  position: relative;
+  width: 50%;
+  height: 40%;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  transform: translateY(-10%);
+}
+
+.earthGlow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+      60% 60% at 40% 35%,
+      rgba(120, 170, 255, 0.25),
+      rgba(0, 0, 0, 0) 70%
+    ),
+    radial-gradient(
+      80% 80% at 50% 50%,
+      rgba(40, 80, 180, 0.2),
+      rgba(0, 0, 0, 0) 75%
+    ),
+    radial-gradient(
+      100% 100% at 50% 50%,
+      rgba(20, 30, 60, 0.5),
+      rgba(0, 0, 0, 0) 70%
+    );
+  filter: blur(10px);
+  z-index: 0;
+}
+
+.earthCoreShadow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    70% 70% at 60% 55%,
+    rgba(0, 0, 0, 0) 55%,
+    rgba(0, 0, 0, 0.35) 100%
+  );
+  z-index: 0;
+}
+
+.earthRings {
+  position: relative;
+  width: 78%;
+  height: 78%;
+  border-radius: 50%;
+  perspective: 800px;
+  transform-style: preserve-3d;
+  z-index: 1;
+}
+
+.ringLat {
+  --latAbs: max(0.08, abs(var(--lat)));
+  --ringScale: calc(1 - (var(--latAbs) * 0.15));
+  --ringRadius: calc(45% * (1 - (abs(var(--lat)) * 0.9)));
+  --speed: calc(16s - (var(--latAbs) * 10s));
+  --dirSign: calc(var(--dir) * 1);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--ringRadius) * 2);
+  height: calc(var(--ringRadius) * 2);
+  transform: translate(-50%, -50%) scale(var(--ringScale));
+  border-radius: 50%;
+  animation: ringRotate var(--speed) linear infinite;
+  animation-direction: normal;
+}
+
+/* rotate each latitude ring with offset and hemisphere direction */
+@keyframes ringRotate {
+  from {
+    transform: translate(-50%, -50%) rotateZ(calc(var(--phase) * 1deg))
+      scale(var(--ringScale));
+  }
+  to {
+    transform: translate(-50%, -50%)
+      rotateZ(calc((var(--phase) + (360 * var(--dirSign))) * 1deg))
+      scale(var(--ringScale));
+  }
+}
+
+.dot3d {
+  --sz: 50px;
+  --depthFade: calc(0.55 + (0.45 * (1 - abs(var(--lat)))));
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--sz);
+  height: var(--sz);
+  border-radius: 50%;
+  transform-origin: 0 0;
+  transform: rotate(var(--a) * 1deg) translateX(var(--ringRadius)) translateY(0);
+  background: radial-gradient(circle, #cfe3ff 0%, #8fb5ff 70%, #6495ed 100%);
+  box-shadow: 0 0 6px rgba(140, 180, 255, 0.9),
+    0 0 12px rgba(80, 120, 255, 0.55);
+  opacity: var(--depthFade);
+  filter: saturate(1.2);
+  animation: dotBlink 240ms ease-in-out infinite alternate,
+    dotDrift 680ms ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+/* twinkle for particle earth */
+@keyframes dotBlink {
+  0% {
+    opacity: calc(var(--depthFade) * 0.7);
+    transform: rotate(calc(var(--a) * 1deg))
+      translateX(calc(var(--ringRadius) - 1px));
+  }
+  100% {
+    opacity: calc(var(--depthFade) * 1);
+    transform: rotate(calc((var(--a) + 1.2) * 1deg))
+      translateX(calc(var(--ringRadius) + 1px));
+  }
+}
+
+@keyframes dotDrift {
+  0% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.15);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+
+
+.jobHeader {
+  position: absolute;
+  top: 14%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  gap: 8px;
+  align-items: baseline;
+  z-index: 2;
+  background: rgba(11, 18, 32, 0.6);
+  border: 1px solid #223042;
+  border-radius: 10px;
+  padding: 6px 10px;
+  backdrop-filter: blur(2px);
+}
+.jobLabel { color: #9fb3d1; font-size: 12px; }
+.jobValue {
+  color: #cfe3ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+}
