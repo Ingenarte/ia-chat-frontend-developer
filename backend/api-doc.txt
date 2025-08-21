@@ -1,0 +1,450 @@
+\[Inferencia]
+A continuación tienes la **documentación API actualizada** para el flujo asíncrono (jobs), más un **OpenAPI 3.0** listo para Swagger/Postman. Incluye `POST /generate` (202 + job), `GET /result/{job_id}`, `GET /jobs`, y `GET /jobs/stats` con acumulados desde el arranque del proceso.
+
+---
+
+# AI Frontend Chat Service – API Docs (async jobs)
+
+## Base URL
+
+* Local: `http://localhost:8000/api/ai`
+* Prod (ejemplo): `https://<tu-dominio>/api/ai`
+
+---
+
+## 1) Healthcheck
+
+### `GET /health`
+
+Verifica disponibilidad.
+
+**200 OK**
+
+```json
+{ "status": "ok", "service": "ai-frontend-chat-service" }
+```
+
+---
+
+## 2) Iniciar generación (async)
+
+### `POST /generate`
+
+Crea un **job** de generación. El procesamiento ocurre en background.
+
+**Request body — GenerateRequest**
+
+```json
+{
+  "message": "Build a car landing page",
+  "previous_html": null,
+  "temperature": 0.35,
+  "top_p": 0.95,
+  "extra": null
+}
+```
+
+* `message` (string, requerido): instrucción del usuario.
+* `previous_html` (string, opcional): HTML previo para iterar.
+* `temperature` (float, opcional; default 0.2).
+* `top_p` (float, opcional; default 0.95).
+* `extra` (objeto libre, opcional).
+
+**Response — 202 Accepted (AcceptedJob)**
+
+```json
+{
+  "job_id": "8134d8f0-5303-46d2-b4ab-7f39367c1965",
+  "status": "received",
+  "expires_at": "2025-08-20T01:23:45.123456Z"
+}
+```
+
+Estados posibles del job: `received` → `processing` → `finished` | `failed`.
+
+**Notas**
+
+* El job expira y se elimina a los **20 minutos** (`expires_at`). Consultas a `/result/{job_id}` de un job expirado devuelven **404**.
+* No se requiere autenticación en este ejemplo (añadir si va a producción).
+
+---
+
+## 3) Consultar resultado de un job
+
+### `GET /result/{job_id}`
+
+Devuelve el estado del job y, cuando termine, el payload final.
+
+**200 OK — en curso**
+
+```json
+{ "job_id": "8134d8f0-5303-46d2-b4ab-7f39367c1965", "status": "processing" }
+```
+
+**200 OK — terminado (JobResult)**
+
+```json
+{
+  "job_id": "8134d8f0-5303-46d2-b4ab-7f39367c1965",
+  "status": "finished",
+  "result": {
+    "error": false,
+    "html": "<!doctype html><html>...</html>",
+    "detail": null
+  }
+}
+```
+
+**200 OK — fallido**
+
+```json
+{
+  "job_id": "8134d8f0-5303-46d2-b4ab-7f39367c1965",
+  "status": "failed",
+  "error": "Quality threshold not met."
+}
+```
+
+**404 Not Found — expirado o inexistente**
+
+```json
+{ "detail": { "job_id": "…", "status": "not_found" } }
+```
+
+---
+
+## 4) Listar jobs (paginado y filtro por estado)
+
+### `GET /jobs`
+
+Query params:
+
+* `status` (opcional): `received|processing|finished|failed`
+* `page` (int, default 1)
+* `size` (int, default 50, máx. 200)
+
+**200 OK — JobListResponse**
+
+```json
+{
+  "items": [
+    {
+      "job_id": "20dc8635-6b41-4ef0-be29-a33aac722e48",
+      "status": "processing",
+      "created_at": "2025-08-20T00:27:09.355740Z",
+      "expires_at": "2025-08-20T00:47:09.355740Z"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "size": 50,
+  "has_more": false
+}
+```
+
+---
+
+## 5) Estadísticas (live + acumuladas)
+
+### `GET /jobs/stats`
+
+Devuelve contadores **live** (sobre jobs aún en memoria) y **acumulados** desde el arranque del proceso, no afectados por el reaper.
+
+**200 OK**
+
+```json
+{
+  "live":    { "received": 0, "processing": 1, "finished": 2, "failed": 0 },
+  "total":   { "received": 10, "processing": 10, "finished": 8, "failed": 2, "created": 10 }
+}
+```
+
+> Los acumulados se reinician si reinicia el proceso. Para persistencia entre reinicios se recomienda almacenamiento externo (p. ej. Redis/archivo).
+
+---
+
+## Errores y códigos relevantes
+
+* `202 Accepted` en `/generate` al crear el job.
+* `200 OK` en `/result/{job_id}`, `/jobs`, `/jobs/stats`.
+* `404 Not Found` si `{job_id}` no existe o expiró.
+* `422 Unprocessable Entity` si falta body o `message` inválido.
+
+---
+
+## Ejemplos — cURL (Linux/macOS)
+
+```bash
+# Crear job
+curl -s -X POST "http://localhost:8000/api/ai/generate" \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Build a car landing page","temperature":0.35}'
+
+# Polling (cada 5 s)
+JOB_ID="<pegar-id>"
+while true; do
+  curl -s "http://localhost:8000/api/ai/result/$JOB_ID"
+  sleep 5
+done
+
+# Listar jobs
+curl -s "http://localhost:8000/api/ai/jobs?status=processing&page=1&size=20"
+
+# Stats
+curl -s "http://localhost:8000/api/ai/jobs/stats"
+```
+
+## Ejemplos — PowerShell (Windows)
+
+```powershell
+# Crear job
+$baseUrl = "http://localhost:8000/api/ai"
+$body = @{ message = "Build a car landing page"; temperature = 0.35 } | ConvertTo-Json
+$job = Invoke-RestMethod -Method Post -Uri ($baseUrl + "/generate") -ContentType "application/json" -Body $body
+$jobId = $job.job_id
+
+# Polling
+while ($true) {
+  $res = Invoke-RestMethod -Method Get -Uri ($baseUrl + "/result/" + $jobId)
+  $res.status
+  if ($res.status -eq "finished") {
+    if ($res.result.html) { $res.result.html | Out-File ("result-" + $jobId + ".html") -Encoding utf8 }
+    break
+  }
+  if ($res.status -eq "failed") { throw "Job failed: $($res.error)" }
+  Start-Sleep -Seconds 5
+}
+
+# Listar
+Invoke-RestMethod -Method Get -Uri ($baseUrl + "/jobs?status=processing&page=1&size=20")
+
+# Stats acumuladas
+Invoke-RestMethod -Method Get -Uri ($baseUrl + "/jobs/stats") | ConvertTo-Json -Depth 5
+```
+
+---
+
+# OpenAPI 3.0 (YAML)
+
+```yaml
+openapi: 3.0.3
+info:
+  title: AI Frontend Chat Service
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8000/api/ai
+paths:
+  /health:
+    get:
+      summary: Healthcheck
+      responses:
+        "200":
+          description: Service is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  service: { type: string, example: ai-frontend-chat-service }
+
+  /generate:
+    post:
+      summary: Create generation job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateRequest"
+      responses:
+        "202":
+          description: Job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcceptedJob"
+        "422":
+          description: Validation error
+
+  /result/{job_id}:
+    get:
+      summary: Get job status or final result
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Job status/result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobResult"
+        "404":
+          description: Job not found or expired
+
+  /jobs:
+    get:
+      summary: List jobs
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema:
+            $ref: "#/components/schemas/JobStatus"
+        - in: query
+          name: page
+          required: false
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: size
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+      responses:
+        "200":
+          description: Jobs page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobListResponse"
+
+  /jobs/stats:
+    get:
+      summary: Live and cumulative stats
+      description: Returns live counts (in-memory) and totals accumulated since process start.
+      responses:
+        "200":
+          description: Stats payload
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  live:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                    example: { received: 0, processing: 1, finished: 2, failed: 0 }
+                  total:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                    example: { received: 10, processing: 10, finished: 8, failed: 2, created: 10 }
+
+components:
+  schemas:
+    GenerateRequest:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          description: User instruction.
+          example: Build a car landing page
+        previous_html:
+          type: string
+          nullable: true
+          description: Optional previous HTML for iterative refinement
+        temperature:
+          type: number
+          format: float
+          default: 0.2
+        top_p:
+          type: number
+          format: float
+          default: 0.95
+        extra:
+          type: object
+          nullable: true
+
+    GenerateResponse:
+      type: object
+      required: [error, html]
+      properties:
+        error:
+          type: boolean
+        html:
+          type: string
+        detail:
+          type: string
+          nullable: true
+
+    JobStatus:
+      type: string
+      enum: [received, processing, finished, failed]
+
+    AcceptedJob:
+      type: object
+      required: [job_id, status, expires_at]
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/JobStatus"
+        expires_at:
+          type: string
+          format: date-time
+
+    JobResult:
+      type: object
+      required: [job_id, status]
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/JobStatus"
+        result:
+          allOf:
+            - $ref: "#/components/schemas/GenerateResponse"
+          nullable: true
+        error:
+          type: string
+          nullable: true
+
+    JobSummary:
+      type: object
+      required: [job_id, status, created_at, expires_at]
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/JobStatus"
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+
+    JobListResponse:
+      type: object
+      required: [items, total, page, size, has_more]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/JobSummary"
+        total:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+        has_more:
+          type: boolean
+```
+
+---
+
+## Notas para el Frontend
+
+* **Polling**: cada **5 s** a `/result/{job_id}` hasta `finished/failed`.
+* **UX**: mostrar `job_id`, `status` en curso y un botón **“Stats”** que abra modal con `/jobs/stats` (live + total).
+* **Expiración**: si `404 not_found`, informar que el job expiró (TTL 20 min) y ofrecer reintentar.
+
+¿Quieres que te entregue esta OpenAPI en un archivo `.yaml` aparte o que te genere un **collection de Postman**?
