@@ -300,3 +300,20 @@
   font-size: 0.9rem;
   color: #666;
 }
+
+.secondaryActionButton {
+  padding: 14px 24px;
+  background: linear-gradient(180deg, #475569, #334155); /* slate tones */
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+}
+.secondaryActionButton:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}

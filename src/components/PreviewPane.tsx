@@ -100,27 +100,24 @@ export default function PreviewPane({
 
             <div className={styles.cardsGrid}>
               <button
-                className={styles.cardButton}
+                className={styles.secondaryActionButton}
                 onClick={() => setOpenModal('ex1')}
               >
-                <span className={styles.cardTitle}>Example 1</span>
-                <span className={styles.cardSubtitle}>This is an example</span>
+                Example 1
               </button>
 
               <button
-                className={styles.cardButton}
+                className={styles.secondaryActionButton}
                 onClick={() => setOpenModal('ex2')}
               >
-                <span className={styles.cardTitle}>Example 2</span>
-                <span className={styles.cardSubtitle}>This is an example</span>
+                Example 2
               </button>
 
               <button
-                className={styles.cardButton}
+                className={styles.secondaryActionButton}
                 onClick={() => setOpenModal('ex3')}
               >
-                <span className={styles.cardTitle}>Example 3</span>
-                <span className={styles.cardSubtitle}>This is an example</span>
+                Example 3
               </button>
             </div>
           </div>
