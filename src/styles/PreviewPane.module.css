@@ -1,14 +1,4 @@
-:root {
-  --bg-elev-1: #0f141b;
-  --bg-elev-2: #151b23;
-  --stroke: #233041;
-  --text: #dbe5f4;
-  --muted: #98a6bd;
-  --brand: #3b82f6;
-  --brand-strong: #2563eb;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --radius: 14px;
-}
+
 
 .wrapper {
   position: relative;
