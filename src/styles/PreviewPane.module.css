@@ -1,5 +1,5 @@
 .wrapper {
-  position: relative; /* overlay relative to preview */
+  position: relative;
   width: 100%;
   height: 100%;
   display: grid;
@@ -14,10 +14,71 @@
 }
 
 .placeholder {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   height: 100%;
-  display: grid;
-  place-items: center;
-  color: var(--text);
+  width: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+  gap: 24px;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 35px;
+  color: #333;
+}
+
+.authorImage {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.author a,
+.authorName {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.author a:hover,
+.authorName:hover {
+  text-decoration: underline;
+}
+
+.logo {
+  width: 140px;
+  height: 140px;
+  object-fit: contain;
+}
+
+.centerText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.centerText h3 {
+  font-weight: bold;
+}
+
+.centerText p {
+  color: #999;
 }
 
 .bump {
@@ -40,4 +101,3 @@
   font-size: 0.9rem;
   color: #666;
 }
-
