@@ -7,6 +7,7 @@ import React, {
   useState,
   forwardRef,
   useImperativeHandle,
+  useCallback,
 } from 'react';
 import styles from '@/styles/ChatPanel.module.css';
 import Slider from '@/components/Slider';
@@ -29,8 +30,16 @@ const errorText =
   'I have made a mistake, I am not pretty sure what happened but I couldnt, please try again';
 
 export type ChatPanelHandle = {
-  /** Allow parent (page.tsx) to inject a system message into the chat */
+  /** Append a system message into the timeline */
   pushSystemMessage: (msg: string) => void;
+  /** Programmatically send a user message immediately (does not clear the current input draft) */
+  sendMessage: (msg: string) => Promise<void>;
+  /** Set the current input box value (prefill) */
+  setInputValue?: (msg: string) => void;
+  /** Focus the input textarea */
+  focusInput?: () => void;
+  /** Trigger the same action as clicking the Send button (uses current input value) */
+  clickSend?: () => Promise<void>;
 };
 
 type Props = {
@@ -40,7 +49,6 @@ type Props = {
   onRequestFinished?: (args: { success: boolean }) => void;
 };
 
-// 👇 definimos el tipo de la respuesta de /generate
 type GenerateJobResponse = {
   job_id?: string;
   error?: string;
@@ -50,7 +58,7 @@ const ChatPanel = forwardRef<ChatPanelHandle, Props>(
   ({ onHtml, currentHtml, onRequestStart, onRequestFinished }, ref) => {
     const [messages, setMessages] = useState<ChatMsg[]>([]);
     const [input, setInput] = useState('');
-    const [temperature, setTemperature] = useState(0.5);
+    const [temperature, setTemperature] = useState(0.9);
     const [topP, setTopP] = useState(1);
     const [loading, setLoading] = useState(false);
 
@@ -58,7 +66,78 @@ const ChatPanel = forwardRef<ChatPanelHandle, Props>(
     const scrollRef = useRef<HTMLDivElement | null>(null);
     const apiBase = process.env.NEXT_PUBLIC_AI_API_BASE || '';
 
-    // expose pushSystemMessage to parent
+    const handleSend = useCallback(
+      async (msg?: string) => {
+        if (loading) return;
+
+        const fromUI = msg === undefined;
+        const userText = (msg ?? input).trim();
+        if (!userText) return;
+
+        if (fromUI) setInput('');
+
+        const idUser = uid();
+        const idProc = uid();
+
+        setMessages((prev) => [
+          ...prev,
+          { id: idUser, role: 'user', text: userText },
+          { id: idProc, role: 'assistant', text: processingText },
+        ]);
+        setLoading(true);
+
+        try {
+          const payload: GenerateRequest = {
+            message: userText,
+            previous_html: currentHtml || '',
+            temperature,
+            top_p: topP,
+          };
+
+          const res = await fetch(`${apiBase}/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === idProc ? { ...m, text: errorText } : m))
+            );
+            onRequestFinished?.({ success: false });
+            return;
+          }
+
+          const data: GenerateJobResponse = await res.json();
+          if (data.error) {
+            setMessages((prev) =>
+              prev.map((m) => (m.id === idProc ? { ...m, text: errorText } : m))
+            );
+            onRequestFinished?.({ success: false });
+          } else if (data.job_id) {
+            onRequestStart?.(data.job_id);
+          }
+        } catch (err) {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === idProc ? { ...m, text: errorText } : m))
+          );
+          onRequestFinished?.({ success: false });
+        } finally {
+          setLoading(false);
+        }
+      },
+      [
+        loading,
+        input,
+        currentHtml,
+        temperature,
+        topP,
+        onRequestFinished,
+        onRequestStart,
+        apiBase,
+      ]
+    );
+    // Imperative API exposed to parent
     useImperativeHandle(
       ref,
       () => ({
@@ -68,13 +147,27 @@ const ChatPanel = forwardRef<ChatPanelHandle, Props>(
             { id: uid(), role: 'system', text: msg },
           ]);
         },
+        sendMessage: async (msg: string): Promise<void> => {
+          setInput(msg);
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          await handleSend(msg);
+        },
+        setInputValue: (msg: string) => setInput(msg),
+        focusInput: () => textareaRef.current?.focus(),
+        clickSend: async (): Promise<void> => {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          await handleSend();
+        },
       }),
-      []
+      [handleSend]
     );
 
+    // UX: focus input on mount
     useEffect(() => {
       textareaRef.current?.focus();
     }, []);
+
+    // Always keep scroller pinned to bottom when messages change
     useEffect(() => {
       if (scrollRef.current) {
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -86,62 +179,11 @@ const ChatPanel = forwardRef<ChatPanelHandle, Props>(
       [loading, input]
     );
 
-    async function handleSend() {
-      if (!canSend) return;
-
-      const userText = input.trim();
-      setInput('');
-      const idUser = uid();
-      const idProc = uid();
-
-      setMessages((prev) => [
-        ...prev,
-        { id: idUser, role: 'user', text: userText },
-        { id: idProc, role: 'assistant', text: processingText },
-      ]);
-      setLoading(true);
-
-      try {
-        const payload: GenerateRequest = {
-          message: userText,
-          previous_html: currentHtml || '',
-          temperature,
-          top_p: topP,
-        };
-
-        const res = await fetch(`${apiBase}/generate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        if (!res.ok) {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === idProc ? { ...m, text: errorText } : m))
-          );
-          onRequestFinished?.({ success: false });
-          return;
-        }
-
-        const data: GenerateJobResponse = await res.json();
-        if (data.error) {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === idProc ? { ...m, text: errorText } : m))
-          );
-          onRequestFinished?.({ success: false });
-        } else if (data.job_id) {
-          onRequestStart?.(data.job_id);
-          // mantenemos el mensaje "processing..." hasta que PreviewPane actualice
-        }
-      } catch (err) {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === idProc ? { ...m, text: errorText } : m))
-        );
-        onRequestFinished?.({ success: false });
-      } finally {
-        setLoading(false);
-      }
-    }
+    /**
+     * Unified send routine.
+     * - If `msg` is provided, it is sent as-is and the input draft is preserved.
+     * - If `msg` is omitted, it uses the current input value and clears the input.
+     */
 
     function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -194,7 +236,7 @@ const ChatPanel = forwardRef<ChatPanelHandle, Props>(
               <button
                 className={styles.sendBtn}
                 disabled={!canSend}
-                onClick={handleSend}
+                onClick={() => handleSend()}
               >
                 {loading ? 'Sending...' : 'Send'}
               </button>

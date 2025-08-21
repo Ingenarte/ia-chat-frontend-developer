@@ -78,6 +78,14 @@ export default function Page() {
     []
   );
 
+  const onTryExample = useCallback((prompt: string) => {
+    chatRef.current?.setInputValue?.(prompt);
+    chatRef.current?.focusInput?.();
+    window.setTimeout(() => {
+      chatRef.current?.clickSend?.();
+    }, 200);
+  }, []);
+
   return (
     <main className="main">
       {/* Left column: single panel with ServiceBar (10%) + Chat (90%) */}
@@ -111,6 +119,7 @@ export default function Page() {
           onModalClose={() => setModalOpen(false)}
           jobId={jobId}
           onFinished={handleModalFinished}
+          onTryExample={onTryExample}
         />
       </section>
 
