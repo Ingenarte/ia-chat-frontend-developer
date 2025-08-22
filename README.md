@@ -1,4 +1,12 @@
-# AI Frontend Chat Service — Self‑Hosted, AI‑Driven Web Developer
+# AI Frontend Chat Service — Self-Hosted, AI-Driven Web Developer
+
+## ⚡ One-Sentence Value Proposition
+
+**A portfolio-grade, production-minded system that lets you build web pages with AI in a secure, self-hosted stack — you own the model, the data, and the infrastructure.**
+
+Runs entirely on your own hardware — even on a basic personal computer (≥4 cores CPU, 8 GB RAM, SSD) — giving you full ownership and control without relying on external cloud vendors.
+
+---
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.x-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
@@ -25,38 +33,32 @@ The project demonstrates **senior full‑stack and AI engineering** practices: m
 ## Architecture (Mermaid)
 
 ```mermaid
-flowchart LR
-    subgraph Browser["User Browser"]
-        UI["Chat UI"]
+flowchart TD
+    subgraph User["User"]
+        ChatUI["Chat UI (Next.js, TS)"]
         Preview["Live HTML Preview"]
     end
 
-    subgraph Vercel["Frontend (Next.js, Vercel)"]
-        FE["/app (Next.js 15, TS)"]
+    subgraph Frontend["Frontend (Vercel, Next.js)"]
+        FE["Next.js App Router"]
     end
 
-    subgraph Server["Backend (FastAPI, Python 3.11)"]
-        API["/api/ai/*"]
-        Runner["Job Runner / Validator"]
+    subgraph Backend["Backend (FastAPI, Python 3.11)"]
+        API["REST API /api/ai/*"]
+        Runner["Job Runner + Validation Layer"]
     end
 
-    subgraph LocalAI["Local AI Runtime"]
-        Ollama["Ollama"]
+    subgraph AI["Local AI Runtime (Self-hosted)"]
+        Ollama["Ollama Runtime"]
         Qwen["Qwen2.5 Coder 3B"]
     end
 
-    CF["Cloudflare Tunnel"]
+    CF["Cloudflare Tunnel (Secure Exposure)"]
 
-    UI --> FE
-    FE -->|REST| API
-    API --> Runner
-    Runner -->|LLM calls| Ollama
-    Ollama --> Qwen
-
-    API <-->|public HTTPS| CF
-    CF <-->|secure tunnel| Server
-
-    FE -->|Deploy| Vercel
+    ChatUI --> FE --> API --> Runner --> Ollama --> Qwen
+    API <--> CF
+    CF <--> Backend
+    FE --> Preview
 ```
 
 ---
@@ -72,7 +74,7 @@ flowchart LR
 
 ## Repos & structure
 
-- `frontend/` — Next.js app (TypeScript).  
+- `frontend/` — Next.js app (TypeScript).
 - `backend/` — FastAPI app (Python).
 
 Each subproject has its own `README.md` with setup and operations guides.
@@ -84,11 +86,13 @@ Each subproject has its own `README.md` with setup and operations guides.
 > Prerequisites: Node.js 18+, Python 3.11+, Docker optional; Ollama installed with the **Qwen2.5‑Coder 3B** model pulled.
 
 1. **Run Ollama locally** (first time pulls the model):
+
    ```bash
    ollama run qwen2.5-coder:3b
    ```
 
 2. **Backend** (see `backend/README.md` for details):
+
    ```bash
    cd backend
    python -m venv .venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
@@ -97,6 +101,7 @@ Each subproject has its own `README.md` with setup and operations guides.
    ```
 
 3. **Frontend** (see `frontend/README.md` for details):
+
    ```bash
    cd frontend
    npm install
@@ -113,13 +118,14 @@ Each subproject has its own `README.md` with setup and operations guides.
 
 ## Testing
 
-- **Frontend**: `npm test` (Jest).  
+- **Frontend**: `npm test` (Jest).
 - **Backend**: `pytest` (Pytest).
 
 ---
 
-## Why this is portfolio‑grade
+## Senior Engineering & System Leadership Highlights
 
-- **Self‑sovereign AI**: You run the model locally (Ollama) and control exposure (Cloudflare Tunnel). No vendor lock‑in.
+- **Self-sovereign AI**: You run the model locally (Ollama) and control exposure (Cloudflare Tunnel). No vendor lock-in.
+- **Lightweight, local-first deployment**: Can operate end-to-end on a standard personal computer, proving that advanced AI workflows don’t require corporate-scale cloud budgets.
 - **Production posture**: CORS, health, stats, TTL reaper, deterministic prompts, robust validation.
-- **Hiring signal**: Demonstrates **Senior Full‑Stack**, **Senior AI Engineer**, and **CTO‑level** system ownership: architecture, runtime strategy, and operational safety.
+- **Hiring signal**: Demonstrates senior-level ownership across full-stack and AI engineering, including architecture, runtime strategy, and operational safety.
