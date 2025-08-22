@@ -1,5 +1,4 @@
-
-
+/* ==== Layout base ==== */
 .wrapper {
   position: relative;
   width: 100%;
@@ -85,7 +84,7 @@
   color: var(--muted);
 }
 
-/* --- Botones --- */
+/* ==== Botones ==== */
 .buttonsWrapper {
   display: flex;
   flex-direction: column;
@@ -160,7 +159,7 @@
   font-size: 14px;
 }
 
-/* --- Modal --- */
+/* ==== Modal ==== */
 @keyframes overlayFade {
   from {
     opacity: 0;
@@ -199,8 +198,11 @@
   box-shadow: var(--shadow);
   padding: 20px 20px 16px;
   animation: panelIn 180ms ease forwards;
+  /* Ensure content can manage its own overflow */
+  max-height: 92vh;
 }
 
+/* --- Close button --- */
 .closeX {
   position: absolute;
   top: 8px;
@@ -220,6 +222,7 @@
   color: var(--text);
 }
 
+/* --- Default modal content --- */
 .modalContent {
   display: flex;
   flex-direction: column;
@@ -273,7 +276,6 @@
 .bump {
   animation: bumpIn 380ms ease;
 }
-
 @keyframes bumpIn {
   0% {
     transform: scale(0.985);
@@ -306,4 +308,165 @@
 .secondaryActionButton:hover {
   transform: translateY(-1px);
   filter: brightness(1.05);
+}
+
+/* ==== About modal 80% viewport (override with higher specificity) ==== */
+.modalPanel.modalPanelLarge {
+  width: 80vw; /* override .modalPanel width */
+  height: 80vh; /* explicit viewport height */
+  max-width: 1200px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* let inner regions control scroll */
+}
+
+/* Fill layout inside the large modal */
+.modalContentFill {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  overflow: hidden; /* header fixed, markdown scrolls */
+}
+
+.modalHeaderRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modalSubtle {
+  font-size: 1.5rem;
+  opacity: 0.7;
+  margin-right: 70px;
+}
+
+.modalActionsRight {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ==== Markdown (dark) ==== */
+.markdownDark {
+  background: #0b0f16;
+  color: #e5e7eb;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  padding: 16px;
+  overflow: auto; /* scrolling region */
+  flex: 1; /* fill remaining space */
+}
+
+/* Headings */
+.markdownDark h1,
+.markdownDark h2,
+.markdownDark h3,
+.markdownDark h4,
+.markdownDark h5,
+.markdownDark h6 {
+  color: #f3f4f6;
+  margin: 1.2em 0 0.5em;
+  line-height: 1.2;
+}
+
+/* Paragraphs */
+.markdownDark p {
+  margin: 0.8em 0;
+}
+
+/* Links & images */
+.markdownDark a {
+  color: #93c5fd;
+  text-decoration: underline;
+}
+.markdownDark img {
+  max-width: 100%;
+  height: auto;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Lists */
+.markdownDark ul,
+.markdownDark ol {
+  padding-left: 1.4rem;
+  margin: 0.6em 0;
+}
+
+/* Blockquotes */
+.markdownDark blockquote {
+  border-left: 4px solid #334155;
+  padding-left: 12px;
+  color: #cbd5e1;
+  margin: 1em 0;
+}
+
+/* Tables (GFM) — responsive on small screens */
+.markdownDark table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  display: block; /* allow horizontal scroll if needed */
+  overflow-x: auto;
+}
+.markdownDark th,
+.markdownDark td {
+  border: 1px solid #1f2937;
+  padding: 8px 10px;
+}
+.markdownDark thead th {
+  background: #0f172a;
+}
+
+/* Code & preformatted */
+.markdownDark code {
+  background: #111827;
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.95em;
+}
+.markdownDark pre {
+  background: #0f172a;
+  color: #e5e7eb;
+  padding: 14px;
+  border-radius: 10px;
+  overflow: auto;
+  border: 1px solid #1f2937;
+}
+.markdownDark pre code {
+  background: transparent;
+  padding: 0;
+}
+
+/* Mermaid container + SVG scaling */
+.markdownDark .mermaid {
+  background: #0b0f16;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  padding: 12px;
+  overflow: auto;
+}
+.markdownDark .mermaid svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Status */
+.loading {
+  color: #d1d5db;
+  font-style: italic;
+}
+.errorBox {
+  background: #1f2937;
+  color: #fecaca;
+  border: 1px solid #b91c1c;
+  padding: 10px 12px;
+  border-radius: 8px;
 }

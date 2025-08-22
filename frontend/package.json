@@ -11,6 +11,10 @@
     "test:cov": "jest --coverage --coverageReporters=text --coverageReporters=text-summary --coverageReporters=lcov --coverageReporters=html"
   },
   "dependencies": {
+    "highlight.js": "^11.11.1",
+    "isomorphic-dompurify": "^2.26.0",
+    "marked": "^16.2.0",
+    "mermaid": "^11.10.1",
     "next": "15.4.7",
     "react": "19.1.0",
     "react-dom": "19.1.0"
