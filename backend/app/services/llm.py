@@ -56,6 +56,7 @@ HTTPX_TIMEOUT = httpx.Timeout(
 )
 
 DEFAULT_NUM_PREDICT = _get_int("DEFAULT_NUM_PREDICT", default=512)
+DEFAULT_NUM_CTX     = _get_int("DEFAULT_NUM_CTX",     default=4096)
 
 SYSTEM_INSTRUCTION = """
 You are an expert frontend engineer.
@@ -109,19 +110,18 @@ async def call_ollama(prompt: str, req: Dict[str, Any]) -> str:
     temperature = float(req.get("temperature", 0.35) or 0.35)
     top_p       = float(req.get("top_p", 0.95) or 0.95)
     seed        = req.get("seed", None)
-    num_ctx     = req.get("num_ctx", None)
-    num_predict = req.get("num_predict", DEFAULT_NUM_PREDICT)
+    num_ctx     = int(req.get("num_ctx", DEFAULT_NUM_CTX))
+    num_predict = int(req.get("num_predict", DEFAULT_NUM_PREDICT))
 
     options: Dict[str, Any] = {
         "temperature": temperature,
         "top_p": top_p,
+        "num_ctx": num_ctx,
+        "num_predict": num_predict,
     }
     if seed is not None:
         options["seed"] = int(seed)
-    if num_ctx is not None:
-        options["num_ctx"] = int(num_ctx)
-    if num_predict is not None:
-        options["num_predict"] = int(num_predict)
+
 
     payload = {
         "model": OLLAMA_MODEL,
