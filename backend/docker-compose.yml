@@ -1,3 +1,4 @@
+#docker compose -p ai-frontend-chat-service up -d --build
 services:
   backend:
     build:
@@ -5,14 +6,14 @@ services:
       dockerfile: Dockerfile
     container_name: ai-frontend-chat-service
     env_file:
-      - ./.env 
+      - ./.env
     environment:
       - TZ=Europe/Rome
       - HOST=0.0.0.0
       - PORT=8000
       - OLLAMA_BASE_URL=http://ollama:11434
     ports:
-      - "8000:8000"
+      - '8000:8000'
     depends_on:
       - ollama
     restart: unless-stopped
@@ -29,7 +30,7 @@ services:
       # Opcional para controlar uso de GPU por Ollama:
       # - OLLAMA_NUM_GPU=1
     ports:
-      - "11434:11434"
+      - '11434:11434'
     gpus: all
     restart: unless-stopped
 
