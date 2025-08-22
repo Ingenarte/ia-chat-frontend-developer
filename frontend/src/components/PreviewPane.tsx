@@ -5,27 +5,33 @@ import { useState, useCallback, useEffect } from 'react';
 
 // Markdown + security + diagrams
 import { marked } from 'marked';
+import { markedHighlight } from 'marked-highlight';
 import DOMPurify from 'isomorphic-dompurify';
 import hljs from 'highlight.js';
 
 type FinishedArgs = { success: boolean; html?: string; error?: string };
 
-// ---- marked configuration (GFM + highlight) ----
+/** Marked base options (only supported keys) */
 marked.setOptions({
   gfm: true,
   breaks: false,
-  // do NOT set headerIds/mangle: they are not part of current MarkedOptions
-  highlight(code: string, lang?: string): string {
-    try {
-      if (lang && hljs.getLanguage(lang)) {
-        return hljs.highlight(code, { language: lang }).value;
-      }
-      return hljs.highlightAuto(code).value;
-    } catch {
-      return code;
-    }
-  },
 });
+
+/** Syntax highlight via plugin (supported by current types) */
+marked.use(
+  markedHighlight({
+    highlight(code: string, lang?: string) {
+      try {
+        if (lang && hljs.getLanguage(lang)) {
+          return hljs.highlight(code, { language: lang }).value;
+        }
+        return hljs.highlightAuto(code).value;
+      } catch {
+        return code;
+      }
+    },
+  })
+);
 
 // ---- Mermaid dynamic loader (client-only) ----
 let mermaidLib: any | null = null;
