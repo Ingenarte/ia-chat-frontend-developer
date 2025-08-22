@@ -1,133 +1,70 @@
-# 🚀 AI HTML Generator Frontend
+# Frontend — Next.js (TypeScript) Chat UI with Live HTML Preview
 
-This repository contains a **Next.js application** that connects to an AI backend for generating complete HTML5 pages from natural language prompts.  
-It provides a **chat-driven interface**, secure HTML preview, and example prompts to inspire users.
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Jest](https://img.shields.io/badge/Test-Jest-C21325?logo=jest&logoColor=white)](https://jestjs.io/)
+[![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel)](https://vercel.com/)
 
----
+A minimalist, production‑minded UI that behaves like a **nano‑Replit**: you chat with the AI, and the **preview pane** renders the **single‑file HTML** returned by the backend. Includes graceful states, modal UX, and a small component system.
 
-## ✨ Features
+## Features
 
-- **Chat-based interface** with persistent history.
-- **Prompt-to-HTML rendering** with safe iframe sandboxing.
-- **Example prompts** (Portfolio, Friends Fan Page, Blog) for quick testing.
-- **Preview panel** with modal-based examples and streaming job status.
-- **Safe rendering**:
-  - All `<a>` links open in a new tab or are disabled.
-  - Buttons inside generated HTML only open/close modals, never redirect.
-- **Configurable API endpoint** via environment variables (`.env.local`).
+- **ChatPanel** to send prompts and display assistant responses
+- **PreviewPane** renders returned HTML securely
+- **Stats/Service modals** and guardrails for disabled service states
+- **Type‑safe API client** and tests via **Jest**
 
----
+## Requirements
 
-## 🛠️ Tech Stack
+- Node.js **18+**
+- `BACKEND_BASE_URL` pointing to the FastAPI service
 
-- [Next.js 14](https://nextjs.org/) (App Router)
-- [React 18](https://react.dev/)
-- TypeScript
-- CSS Modules
-- Cloudflare Tunnel (optional for backend exposure)
+## Environment
 
----
+Copy `env.template` to `.env.local` and set variables:
 
-## 📂 Project Structure
-
-```
-src/
- ├─ components/
- │   ├─ ChatPanel.tsx        # Chat input + message list
- │   ├─ PreviewPane.tsx      # Safe iframe preview + modals
- │   ├─ PreviewModal.tsx     # Status modal (pairing/generating/done)
- │   └─ MessageList.tsx      # User & AI message rendering
- ├─ app/
- │   ├─ page.tsx             # Main entry point
- │   └─ globals.css          # Global styles
- └─ types/
-     └─ api.ts               # Shared API request/response types
+```env
+# Backend base URL: Local dev, Cloudflare Tunnel, or any public endpoint
+NEXT_PUBLIC_BACKEND_BASE_URL=http://localhost:8000
+# Optional: feature flags or UI toggles can be added here
 ```
 
----
+## Install & Run (local)
 
-## ⚙️ Setup & Installation
+```bash
+npm install
+npm run dev
+# Open http://localhost:3000
+```
 
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/ai-html-generator.git
-   cd ai-html-generator
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
-
-3. Create a `.env.local` file:
-
-   ```env
-   NEXT_PUBLIC_AI_API_BASE=http://localhost:8000/api/ai
-   ```
-
-4. Run the development server:
-
-   ```bash
-   npm run dev
-   ```
-
-5. Open your browser at [http://localhost:3000](http://localhost:3000).
-
----
-
-## 🚀 Deployment
-
-### Vercel
-
-This project is fully compatible with **Vercel**:
+## Build & Production
 
 ```bash
 npm run build
-npm run start
+npm start
 ```
 
-Push to GitHub, then import the repository into Vercel.
+### Vercel Deployment
 
-### Cloudflare Subdomain
+1. Push the project to GitHub.
+2. Import the repo in Vercel.
+3. Set **Environment Variable** `NEXT_PUBLIC_BACKEND_BASE_URL` to your API origin (local, server, or Cloudflare Tunnel URL).
+4. Deploy.
 
-If you want to expose the backend via Cloudflare Tunnel:
+## How it connects to the backend
+
+The UI calls the backend endpoints under `/api/ai/*`:
+- `GET /api/ai/health` for availability checks
+- `POST /api/ai/generate` to enqueue a generation job
+- `GET /api/ai/result/{job_id}` to retrieve the generated HTML
+- `GET /api/ai/jobs/stats` for basic dashboard metrics
+
+## Testing
 
 ```bash
-cloudflared tunnel --config ./config.yml run
+npm test
+# or
+npm run test
 ```
 
-Then point a subdomain (`ai.yourdomain.com`) to the tunnel.
-
----
-
-## 🔒 Security Notes
-
-- `.env.local` is ignored by Git (`.env.example` should be provided for reference).
-- All untrusted HTML is sandboxed inside an `<iframe>` with sanitized links/buttons.
-- No inline script execution is allowed in generated HTML.
-
----
-
-## 📸 Screenshots
-
-_(Add here preview images or GIFs of your app in action)_
-
----
-
-## 📜 License
-
-MIT License © 2025 Franco Mariano Rodrigo
-
----
-
-## 👨‍💻 Author
-
-**Franco Mariano Rodrigo**
-
-- 🌐 [ingenarte.com](https://ingenarte.com)
-- 💼 [LinkedIn](https://linkedin.com/in/fmrodrigo)
-- 🛠️ Engineer | Fullstack | AI Integration | Frontend Specialist
+Jest covers key components (`ChatPanel`, `PreviewPane`, modals) and integration behaviors.

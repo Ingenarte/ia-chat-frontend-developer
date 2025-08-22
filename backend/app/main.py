@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from .routers.ai import router as ai_router
 from .services.jobs import job_store
+from dotenv import load_dotenv
+
+load_dotenv() 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
